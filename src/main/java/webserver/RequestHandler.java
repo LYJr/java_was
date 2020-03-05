@@ -25,17 +25,20 @@ public class RequestHandler extends Thread {
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
 
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 
             String read = bufferedReader.readLine();
             String url = SplitUtil.split(read);
-            log.debug("url : {}" + url);
+            log.debug("url : {}", url);
 
-
-
+            while (!read.equals("") && read != null) {
+                log.debug("read : {}", read);
+                read = bufferedReader.readLine();
+            }
 
             DataOutputStream dos = new DataOutputStream(out);
             byte[] body = "hi".getBytes();
+//          이거 바꾸면 제대로 돌아감   // Files.readAllBytes(new File("./webapp" + url).toPath());
             response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
