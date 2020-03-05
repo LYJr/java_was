@@ -6,6 +6,7 @@ import java.nio.file.Files;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.SplitUtil;
 
 public class RequestHandler extends Thread {
 
@@ -27,16 +28,14 @@ public class RequestHandler extends Thread {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
 
             String read = bufferedReader.readLine();
-
-           while () {
-
-            }
+            String url = SplitUtil.split(read);
+            log.debug("url : {}" + url);
 
 
 
 
             DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = Files.readAllLines("./webapp"+ url);
+            byte[] body = "hi".getBytes();
             response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
