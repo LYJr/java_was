@@ -6,6 +6,8 @@ import java.nio.file.Files;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.HttpRequestUtils;
+import util.IOUtils;
 import util.SplitUtil;
 
 public class RequestHandler extends Thread {
@@ -28,12 +30,25 @@ public class RequestHandler extends Thread {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 
             String read = bufferedReader.readLine();
-            String url = SplitUtil.split(read);
+            String url = SplitUtil.urlSplit(read);
             log.debug("url : {}", url);
+
+            String dataLength = null;
 
             while (!read.equals("") && read != null) {
                 log.debug("read : {}", read);
+
+                if(read.contains("Content-Length")) {
+                    dataLength = read;
+                    log.debug(dataLength);
+                }
                 read = bufferedReader.readLine();
+            }
+
+            String data = null;
+            if(dataLength != null) {
+                data = IOUtils.readData(bufferedReader, Integer.parseInt(SplitUtil.bodySplit(dataLength)));
+                log.debug("data : {}", data);
             }
 
             DataOutputStream dos = new DataOutputStream(out);
