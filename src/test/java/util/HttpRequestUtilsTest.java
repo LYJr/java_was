@@ -10,6 +10,8 @@ import org.junit.Test;
 import util.HttpRequestUtils.Pair;
 
 public class HttpRequestUtilsTest {
+
+
     @Test
     public void parseQueryString() {
         String queryString = "userId=javajigi";
@@ -69,5 +71,13 @@ public class HttpRequestUtilsTest {
         String header = "Content-Length: 59";
         Pair pair = HttpRequestUtils.parseHeader(header);
         assertThat(pair, is(new Pair("Content-Length", "59")));
+    }
+
+    @Test
+    public void createObject() {
+        String data = "userId=adsfa&password=1234131&name=aaaa&email=b%40b.b";
+
+        Map<String, String> test = HttpRequestUtils.parseQueryString(data);
+
     }
 }

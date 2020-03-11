@@ -3,6 +3,7 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,4 +81,13 @@ public class RequestHandler extends Thread {
             log.error(e.getMessage());
         }
     }
+
+//    private Object createObject(String data) {
+//        Map<String, String> bodys = HttpRequestUtils.parseQueryString(data);
+//
+//        for (String s : bodys.keySet()) {
+//        }
+//
+//        return null;
+//    }
 }
