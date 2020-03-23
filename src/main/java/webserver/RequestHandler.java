@@ -5,6 +5,8 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.util.Map;
 
+import model.User;
+import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
@@ -27,16 +29,20 @@ public class RequestHandler extends Thread {
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
-
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
 
             String read = bufferedReader.readLine();
+
+            if(read == null) {
+                return;
+            }
+
             String url = SplitUtil.urlSplit(read);
             log.debug("url : {}", url);
 
             String dataLength = null;
 
-            while (!read.equals("") && read != null) {
+            while (!read.equals("")) {
                 log.debug("read : {}", read);
 
                 if(read.contains("Content-Length")) {
@@ -51,6 +57,9 @@ public class RequestHandler extends Thread {
                 data = IOUtils.readData(bufferedReader, Integer.parseInt(SplitUtil.bodySplit(dataLength)));
                 log.debug("data : {}", data);
             }
+
+            User user = (User)createObject(data);
+            log.debug("User : {}", user);
 
             DataOutputStream dos = new DataOutputStream(out);
 
@@ -82,12 +91,12 @@ public class RequestHandler extends Thread {
         }
     }
 
-//    private Object createObject(String data) {
-//        Map<String, String> bodys = HttpRequestUtils.parseQueryString(data);
-//
-//        for (String s : bodys.keySet()) {
-//        }
-//
-//        return null;
-//    }
+    private Object createObject(String body) {
+        Map<String, String> user = HttpRequestUtils.parseQueryString(body);
+
+        return new User(user.get("userId"),
+                user.get("password"),
+                user.get("name"),
+                user.get("email"));
+    }
 }

@@ -4,9 +4,13 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 
+import org.reflections.ReflectionUtils;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 import util.HttpRequestUtils.Pair;
 
 public class HttpRequestUtilsTest {
@@ -74,10 +78,17 @@ public class HttpRequestUtilsTest {
     }
 
     @Test
-    public void createObject() {
+    public void createObject() throws ClassNotFoundException {
         String data = "userId=adsfa&password=1234131&name=aaaa&email=b%40b.b";
-
         Map<String, String> test = HttpRequestUtils.parseQueryString(data);
+        Reflections reflections = new Reflections("model", new SubTypesScanner(false));
+        Set<? extends Object> a = reflections.getSubTypesOf(Object.class);
+        System.out.println(a);
 
+        for (Object o : a) {
+            String[]  x = o.toString().split(" ");
+            String n = x[1];
+
+        }
     }
 }
