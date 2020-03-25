@@ -13,6 +13,8 @@ import util.HttpRequestUtils;
 import util.IOUtils;
 import util.SplitUtil;
 
+import javax.xml.stream.Location;
+
 public class RequestHandler extends Thread {
 
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -52,19 +54,19 @@ public class RequestHandler extends Thread {
                 read = bufferedReader.readLine();
             }
 
+            DataOutputStream dos = new DataOutputStream(out);
+            byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
+
             String data = null;
-            if(dataLength != null) {
+            if(dataLength != null && url.equals("/user/create.html")) {
                 data = IOUtils.readData(bufferedReader, Integer.parseInt(SplitUtil.bodySplit(dataLength)));
-                log.debug("data : {}", data);
+                User user = createObject(data);
+                log.debug("User : {}", user);
+                response302Header(dos);
+            } else {
+                response200Header(dos, body.length);
             }
 
-            User user = (User)createObject(data);
-            log.debug("User : {}", user);
-
-            DataOutputStream dos = new DataOutputStream(out);
-
-            byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
-            response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -82,6 +84,16 @@ public class RequestHandler extends Thread {
         }
     }
 
+    private void response302Header(DataOutputStream dos) {
+        try{
+            dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
+            dos.writeBytes("Location: /index.html");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
             dos.write(body, 0, body.length);
@@ -91,7 +103,7 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private Object createObject(String body) {
+    private User createObject(String body) {
         Map<String, String> user = HttpRequestUtils.parseQueryString(body);
 
         return new User(user.get("userId"),
