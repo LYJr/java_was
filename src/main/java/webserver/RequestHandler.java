@@ -5,20 +5,18 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.util.Map;
 
+import db.DataBase;
 import model.User;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import service.UserService;
 import util.HttpRequestUtils;
 import util.IOUtils;
 import util.SplitUtil;
 
-import javax.xml.stream.Location;
-
 public class RequestHandler extends Thread {
 
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
-
     private Socket connection;
 
     public RequestHandler(Socket connectionSocket) {
@@ -39,8 +37,8 @@ public class RequestHandler extends Thread {
                 return;
             }
 
-            String url = SplitUtil.urlSplit(read);
-            log.debug("url : {}", url);
+            String[] url = SplitUtil.urlSplit(read);
+            log.debug("url : {}", url[1]);
 
             String dataLength = null;
 
@@ -55,19 +53,31 @@ public class RequestHandler extends Thread {
             }
 
             DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
 
             String data = null;
-            if(dataLength != null && url.equals("/user/create.html")) {
-                data = IOUtils.readData(bufferedReader, Integer.parseInt(SplitUtil.bodySplit(dataLength)));
-                User user = createObject(data);
-                log.debug("User : {}", user);
-                response302Header(dos);
+            if(url[0].equals("POST")) {
+                if(dataLength != null && url[1].equals("/user/create.html")) {
+                    data = IOUtils.readData(bufferedReader, Integer.parseInt(SplitUtil.bodySplit(dataLength)));
+                    log.debug("data create : {}", data);
+                    User user = createObject(data);
+                    DataBase.addUser(user);
+                    response302Header(dos);
+                }
+
+                //login
+                if(dataLength != null && url[1].equals("/user/login")) {
+                    data = IOUtils.readData(bufferedReader, Integer.parseInt(SplitUtil.bodySplit(dataLength)));
+                    log.debug("data login : {}", data);
+                    login302Header(dos, data);
+                }
             } else {
+                byte[] body = Files.readAllBytes(new File("./webapp" + url[1]).toPath());
+
                 response200Header(dos, body.length);
+                responseBody(dos, body);
             }
 
-            responseBody(dos, body);
+
         } catch (IOException e) {
             log.error(e.getMessage());
         }
@@ -85,9 +95,21 @@ public class RequestHandler extends Thread {
     }
 
     private void response302Header(DataOutputStream dos) {
+        String location = "Location: /index.html";
         try{
             dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
-            dos.writeBytes("Location: /index.html");
+            dos.writeBytes(location);
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    private void login302Header(DataOutputStream dos, String data) {
+        try{
+            dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
+            dos.writeBytes(UserService.location(data));
+            UserService.setCookie(dos, data);
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
