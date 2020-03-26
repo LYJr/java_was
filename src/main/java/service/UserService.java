@@ -27,4 +27,12 @@ public class UserService {
     public static void setCookie(DataOutputStream dos, String data) throws IOException {
         dos.writeBytes(isLogin(data) ? "Set-Cookie: logined=true; Path=/" : "Set-Cookie: logined=false; Path=/");
     }
+
+    public static void cookieLocation(DataOutputStream dos, String cookie) throws IOException {
+        dos.writeBytes(isCookieLogined(cookie) ? "Location: /user/list.html\r\n" : "Location: /user/login.html\r\n");
+    }
+
+    private static boolean isCookieLogined(String cookie) {
+        return cookie != null && cookie.contains("true");
+    }
 }

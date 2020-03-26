@@ -41,6 +41,7 @@ public class RequestHandler extends Thread {
             log.debug("url : {}", url[1]);
 
             String dataLength = null;
+            String cookie = null;
 
             while (!read.equals("")) {
                 log.debug("read : {}", read);
@@ -49,12 +50,18 @@ public class RequestHandler extends Thread {
                     dataLength = read;
                     log.debug(dataLength);
                 }
+
+                if(read.contains("Cookie")) {
+                    cookie = read;
+                    log.debug(cookie);
+                }
                 read = bufferedReader.readLine();
             }
 
             DataOutputStream dos = new DataOutputStream(out);
 
             String data = null;
+
             if(url[0].equals("POST")) {
                 if(dataLength != null && url[1].equals("/user/create.html")) {
                     data = IOUtils.readData(bufferedReader, Integer.parseInt(SplitUtil.bodySplit(dataLength)));
@@ -71,12 +78,24 @@ public class RequestHandler extends Thread {
                     login302Header(dos, data);
                 }
             } else {
+
+                log.debug("확인용 : {}",url[1]);
+                //userList
+                if(url[1].equals("/user/list")) {
+                    log.debug("data cookie : {}", cookie);
+
+                    if(cookie != null) {
+                        data = cookie.replaceAll(" ", "").split(":|=")[2];
+                    }
+                    log.debug("data login : {}", data);
+                    userList302Header(dos, data);
+                }
+
                 byte[] body = Files.readAllBytes(new File("./webapp" + url[1]).toPath());
 
                 response200Header(dos, body.length);
                 responseBody(dos, body);
             }
-
 
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -88,6 +107,16 @@ public class RequestHandler extends Thread {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    private void userList302Header(DataOutputStream dos, String cookie){
+        try {
+            dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
+            UserService.cookieLocation(dos, cookie);
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
