@@ -9,6 +9,7 @@ import db.DataBase;
 import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import service.HttpHeaderService;
 import service.UserService;
 import util.HttpRequestUtils;
 import util.IOUtils;
@@ -93,7 +94,11 @@ public class RequestHandler extends Thread {
 
                 byte[] body = Files.readAllBytes(new File("./webapp" + url[1]).toPath());
 
-                response200Header(dos, body.length);
+
+                if(!url[1].contains("html")) {
+                }
+
+                response200Header(dos, body.length, url[1]);
                 responseBody(dos, body);
             }
 
@@ -102,10 +107,15 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
+    private String contentTypeInsert(String url) {
+        return url != null?
+                "Content-Type: text"+ HttpHeaderService.contentType(url) +"charset=utf-8\\r\\n" : "Content-Type: text/html;charset=utf-8\r\n";
+    }
+
+    private void response200Header(DataOutputStream dos, int lengthOfBodyContent, String url) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes(contentTypeInsert(url));
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
