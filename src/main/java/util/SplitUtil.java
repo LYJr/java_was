@@ -6,8 +6,9 @@ public class SplitUtil {
         String[] split = read.split(" ");
         return split;
     }
+
     public static String bodySplit(String read) {
-        String[] split = read.replaceAll(" ", "").split(":");
+        String[] split = read.replaceAll(" ", "").split(":|=");
         return split[1];
     }
 
